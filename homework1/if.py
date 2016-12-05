@@ -16,6 +16,6 @@ def string_compare(string1, string2):
 
 if __name__ == "__main__":
     try:
-        print(string_compare("string11"))
+        print(string_compare("string11", "string111"))
     except TypeError as e:
         print("Возникла ошибка в ходе выполнения: {}".format(e))
