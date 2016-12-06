@@ -14,13 +14,16 @@ def find_person(name):
             break
 
 def ask_user():
-    while True:
-        question = input('Как дела?: ').lower().strip()
-        if question in ['хорошо', 'пока']:
-            print('Пока, удачного дня тебе!')
-            break
-        else:
-            print(get_answer(question))
+    try:
+        while True:
+            question = input('Как дела?: ').lower().strip()
+            if question in ['хорошо', 'пока']:
+                print('Пока, удачного дня тебе!')
+                break
+            else:
+                print(get_answer(question))
+    except (KeyboardInterrupt, EOFError):
+        print('\nИсключение обработано, выходим!')
 
 def get_answer(question):
     return answer_list.get(question, 'Я не понимаю тебя')
