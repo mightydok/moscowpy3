@@ -53,8 +53,13 @@ def translate_word(bot, update):
 
         # Переводим и на выходе получаем словарь
         word_translated_dic = translate.translate(word, lang)
-        # Пишем в чат перевод из словара выбираем список по ключу text
-        bot.sendMessage(update.message.chat_id, 'Перевод: {}'.format(word_translated_dic['text'][0]))
+        # Проверяем что полученный словарь содержит перевод и это строка
+        if word_translated_dic['text'][0] and isinstance(word_translated_dic['text'][0], str):
+            # Пишем в чат перевод из словара выбираем список по ключу text
+            bot.sendMessage(update.message.chat_id, 'Перевод: {}'.format(word_translated_dic['text'][0]))
+        # Иначе поднимаем ошибку с кодом 422
+        else:
+            raise YandexTranslateException(422)
 
     # Если возникли проблемы с переводом, пишем про это
     except YandexTranslateException:
