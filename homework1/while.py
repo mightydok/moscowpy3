@@ -7,11 +7,14 @@ answer_list = {
 }
 
 def find_person(name):
-    while True:
-        item = name_list.pop()
-        if name == item:
-            return name
-            break
+    try:
+        while True:
+            item = name_list.pop()
+            if name == item:
+                return name
+                break
+    except IndexError:
+        return 'Не могу найти имя в списке'
 
 def ask_user():
     try:
@@ -29,5 +32,7 @@ def get_answer(question):
     return answer_list.get(question, 'Я не понимаю тебя')
 
 if __name__ == '__main__':
+    # print(find_person('123'))
     ask_user()
+
 
