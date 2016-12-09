@@ -45,6 +45,7 @@ def translate_word(bot, update, args):
         # Если язык непонятный, пишем в чат что его не поддерживаем
         if word_lang not in ['ru', 'en']:
             bot.sendMessage(update.message.chat_id, 'Я знаю только русский и английский')
+            return
         # Выбираем язык в какой требуется перевод
         elif word_lang == 'ru':
             lang = 'en'
