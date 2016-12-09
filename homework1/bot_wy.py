@@ -9,7 +9,7 @@ def main():
 
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", greet_user))
-    dp.add_handler(CommandHandler("tr", translate_word))
+    dp.add_handler(CommandHandler("tr", translate_word, pass_args=True))
     dp.add_handler(MessageHandler([Filters.text], talk_to_me))
 
     dp.add_error_handler(show_error)
@@ -29,16 +29,17 @@ def talk_to_me(bot, update):
     print('Пришло сообщение: "{}"'.format(update.message.text))
     bot.sendMessage(update.message.chat_id, update.message.text)
 
-def translate_word(bot, update):
-    print('Пришло слово для перевода: "{}"'.format(update.message.text))
+def translate_word(bot, update, args):
+    print('Пришло слово для перевода: "{}"'.format(args))
 
     try:
         # Подключаемся к Яндекс переводчику
         translate = YandexTranslate(
             'trnsl.1.1.20161206T204246Z.d8c8ef6d545c7ee5.3b96b277a0d9bb5f0a0060714a5b75d6fa6604b3')
 
-        # Получаем слово для перевода, телеграм нам дает строку, разбиваем ее на две части
-        word = update.message.text.strip().lower().split(' ', 1)[1]
+        # Получаем слово для перевода, телеграм нам дает список, собираем его в строку
+        word = ' '.join(args).strip().lower()
+        print(word)
         # Определяем язык слова
         word_lang = translate.detect(word)
 
