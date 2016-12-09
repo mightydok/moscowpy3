@@ -39,7 +39,6 @@ def translate_word(bot, update, args):
 
         # Получаем слово для перевода, телеграм нам дает список, собираем его в строку
         word = ' '.join(args).strip().lower()
-        print(word)
         # Определяем язык слова
         word_lang = translate.detect(word)
 
