@@ -38,7 +38,7 @@ def translate_word(bot, update, args):
             'trnsl.1.1.20161206T204246Z.d8c8ef6d545c7ee5.3b96b277a0d9bb5f0a0060714a5b75d6fa6604b3')
 
         # Получаем слово для перевода, телеграм нам дает список, собираем его в строку
-        word = ' '.join(args).strip().lower()
+        word = ' '.join(args).lower()
         # Определяем язык слова
         word_lang = translate.detect(word)
 
