@@ -3,6 +3,9 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from yandex_translate import YandexTranslate, YandexTranslateException
 
+import re
+
+spec_symbols = '~`@#$%^&*()_-=!?\';[]\{\}<>,.*/+\\'
 
 def main():
     updater = Updater("278875881:AAE_qMeNfatAqkML4JQF6YZ3rCcJ79hjE4I")
@@ -10,6 +13,7 @@ def main():
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", greet_user))
     dp.add_handler(CommandHandler("tr", translate_word, pass_args=True))
+    dp.add_handler(CommandHandler("wordcount", word_count, pass_args=True))
     dp.add_handler(MessageHandler([Filters.text], talk_to_me))
 
     dp.add_error_handler(show_error)
@@ -27,7 +31,20 @@ def show_error(bot, update, error):
 
 def talk_to_me(bot, update):
     print('Пришло сообщение: "{}"'.format(update.message.text))
-    bot.sendMessage(update.message.chat_id, update.message.text)
+
+    message = update.message.text.strip()
+    if not message.startswith('=') and message.endswith('=') and re.findall(r'[\+\-\*\/]', message):
+        try:
+            bot.sendMessage(update.message.chat_id, eval(message.split('=',1).pop(0)))
+            return
+        except SyntaxError:
+            bot.sendMessage(update.message.chat_id, 'Ошибка в примере, калькулятор не может выполнить арифметическое действие')
+            return
+        except ZeroDivisionError:
+            bot.sendMessage(update.message.chat_id, 'На ноль делить нельзя')
+            return
+    else:
+        bot.sendMessage(update.message.chat_id, update.message.text)
 
 def translate_word(bot, update, args):
     print('Пришло слово для перевода: "{}"'.format(args))
@@ -66,6 +83,17 @@ def translate_word(bot, update, args):
     except YandexTranslateException:
         bot.sendMessage(update.message.chat_id, 'Не смог перевести слово. Или слово такое, что Яндекс его перевести '
                         'не может, или просто недоступно API для перевода')
+
+def word_count(bot, update, args):
+    print('Пришла строка для подсчета: "{}"'.format(args))
+    # Создаем список для подсчета количества слов
+    numwords = []
+    # Проходим список слов в цикле, убираем спецсимволы и проверяем слово ли нам передали, если да - добавляем
+    # в массив для подсчета
+    for word in args:
+        if word.strip(spec_symbols).isalpha() == True:
+            numwords.append(word)
+    bot.sendMessage(update.message.chat_id, 'Количество слов в строке: {}'.format(len(numwords)))
 
 if __name__ == "__main__":
     main()
