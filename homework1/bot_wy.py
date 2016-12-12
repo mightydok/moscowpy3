@@ -1,7 +1,10 @@
 # coding: utf-8
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import ReplyKeyboardMarkup
 from yandex_translate import YandexTranslate, YandexTranslateException
+
+calc = []
 
 def main():
     updater = Updater("278875881:AAE_qMeNfatAqkML4JQF6YZ3rCcJ79hjE4I")
@@ -10,7 +13,8 @@ def main():
     dp.add_handler(CommandHandler("start", greet_user))
     dp.add_handler(CommandHandler("tr", translate_word, pass_args=True))
     dp.add_handler(CommandHandler("wordcount", word_count, pass_args=True))
-    dp.add_handler(MessageHandler([Filters.text], talk_to_me))
+    dp.add_handler(CommandHandler("calc", show_calc, pass_args=True))
+    dp.add_handler(MessageHandler([Filters.text], talk_to_me, pass_user_data=True))
 
     dp.add_error_handler(show_error)
 
@@ -26,8 +30,9 @@ def greet_user(bot, update):
 def show_error(bot, update, error):
     print('Update "{} caused error "{}"'.format(update, error))
 
-def talk_to_me(bot, update):
+def talk_to_me(bot, update, user_data):
     print('Пришло сообщение: "{}"'.format(update.message.text))
+    print(user_data)
 
     # Обрабатываем пришедший текст
     message = update.message.text.strip().replace(' ', '')
@@ -35,6 +40,12 @@ def talk_to_me(bot, update):
     if not message.startswith('=') and message.endswith('='):
         result = calculate(message)
         bot.sendMessage(update.message.chat_id, 'Результат выражения: {}'.format(result))
+    elif message in '0123456789+-*/.=':
+        user_data['calc'] = user_data.get('calc', '') + message
+        if message == '=':
+            result = calculate(user_data['calc'])
+            bot.sendMessage(update.message.chat_id, 'Результат выражения: {}'.format(result))
+            user_data['calc'] = ''
     else:
         # Если не режим калькулятора, то пишем в ответ текст который пришел
         bot.sendMessage(update.message.chat_id, update.message.text)
@@ -144,6 +155,16 @@ def precalculate(part):
         return part[0]-sum(part[1:])
 
     return part
+
+def show_calc(bot, update, args):
+    custom_keyboard = [
+                        ['1', '2', '3', '+'],
+                        ['4', '5', '6', '-'],
+                        ['7', '8', '9', '*'],
+                        ['.', '0', '=', '/'],
+                    ]
+    reply_markup = ReplyKeyboardMarkup(custom_keyboard)
+    bot.sendMessage(update.message.chat_id, text="Calculator Keyboard", reply_markup=reply_markup)
 
 if __name__ == "__main__":
     main()
