@@ -3,10 +3,6 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from yandex_translate import YandexTranslate, YandexTranslateException
 
-import re
-
-spec_symbols = '~`@#$%^&*()_-=!?\';[]\{\}<>,.*/+\\'
-
 def main():
     updater = Updater("278875881:AAE_qMeNfatAqkML4JQF6YZ3rCcJ79hjE4I")
 
@@ -30,27 +26,6 @@ def greet_user(bot, update):
 def show_error(bot, update, error):
     print('Update "{} caused error "{}"'.format(update, error))
 
-# Проверка корректной строки для калькулятора
-def check_arifmetic_string(bot, update, message):
-    if re.findall(r'((?![\+\-\*\/\.\d+\(\)\=]).)', message):
-        bot.sendMessage(update.message.chat_id, 'В строке для калькулятора есть лишние символы, '
-                                                'удалите их для корректной работы арифметических функций')
-        return False
-    elif len(re.findall(r'\d+\.\d+|\d+|[\+\-\*\/\(\)]', message)) < 3:
-        bot.sendMessage(update.message.chat_id, 'Невозможно обработать запрос, не хватает всех цифр или арифметических знаков')
-        return False
-    elif len(re.findall(r'[\+\-\*\/]', message)) == 0 or len(re.findall(r'\d+\.\d+|\d+', message)) == 0:
-        bot.sendMessage(update.message.chat_id, 'В строке не найдены арифметические знаки или цифры, калькулятор не может работать без них')
-        return False
-    elif len(re.findall(r'\d+\.\d+|\d+', message)) == 1:
-        bot.sendMessage(update.message.chat_id, 'Нужна еще одна цифра для работы калькулятора')
-        return False
-    elif '**' in message or '//' in message:
-        bot.sendMessage(update.message.chat_id, 'Арифметические действия: ** и // не поддерживаются')
-        return False
-    else:
-        return True
-
 def talk_to_me(bot, update):
     print('Пришло сообщение: "{}"'.format(update.message.text))
 
@@ -58,22 +33,8 @@ def talk_to_me(bot, update):
     message = update.message.text.strip().replace(' ', '')
     # Проверяем пришел ли запрос на калькулятор
     if not message.startswith('=') and message.endswith('='):
-        # Проверям строку для калькулятора на корректный текст
-        if check_arifmetic_string(bot, update, message):
-            try:
-                # Собираем строку для рассчета, отбрасываем любые символы кроме цифр, точек и арифметических знаков,
-                # знак = тоже отбрасываем
-                calculated = re.findall(r'[\+\-\*\/\d+\(\)\.]', message)
-                # Считаем и отдаем результат
-                result = eval(''.join(calculated))
-                bot.sendMessage(update.message.chat_id, result)
-                return
-            except SyntaxError:
-                bot.sendMessage(update.message.chat_id, 'Ошибка в примере, калькулятор не может выполнить арифметическое действие')
-                return
-            except ZeroDivisionError:
-                bot.sendMessage(update.message.chat_id, 'На ноль делить нельзя')
-                return
+        result = calculate(message)
+        bot.sendMessage(update.message.chat_id, 'Результат выражения: {}'.format(result))
     else:
         # Если не режим калькулятора, то пишем в ответ текст который пришел
         bot.sendMessage(update.message.chat_id, update.message.text)
@@ -126,6 +87,63 @@ def word_count(bot, update, args):
         if word.strip(spec_symbols).isalpha() == True:
             numwords.append(word)
     bot.sendMessage(update.message.chat_id, 'Количество слов в строке: {}'.format(len(numwords)))
+
+
+def calculate(string):
+    try:
+        string = string.lower().replace('=', '')
+        parts = string.split('+')
+
+        for plus in range(len(parts)):
+            if '-' in parts[plus]:
+                parts[plus] = parts[plus].split('-')
+
+        for plus in range(len(parts)):
+            parts[plus] = precalculate(parts[plus])
+
+        result = sum(parts)
+    except ValueError:
+        result = 'Не могу обработать строку для калькулятора'
+    except ZeroDivisionError:
+        result = 'На ноль делить нельзя'
+
+    return result
+
+def precalculate(part):
+    # Если получили строку на вход
+    if type(part) is str:
+        # Проверяем операция ли это умножения
+        if '*' in part:
+            result = 1
+            # Получаем множители
+            for subpart in part.split('*'):
+                # Вызываем рекурсию чтобы получить данные в float и выполняем перемножение
+                result *= precalculate(subpart)
+            return result
+        # Проверяем деление ли это
+        elif '/' in part:
+            # Преобразуем в float числа опять благодаря рекурсии
+            parts = list(map(precalculate, part.split('/')))
+            # Выделяем целую часть
+            result = parts[0]
+            # В цикле делим целую часть на дробную
+            for subpart in parts[1:]:
+                result /= subpart
+            return result
+
+        else:
+            # Если нам на входе дали строку, но не нашли * или /, то просто возвращаем ту же строку но во float
+            return float(part)
+    # Если получили список на вход, после второго прохода при определении операции вычитания
+    elif type(part) is list:
+        # Опять вызываем рекурсию для определения есть ли внутри списка операции умножения и деления
+        for i in range(len(part)):
+            part[i] = precalculate(part[i])
+
+        # Вычитаем из первого числа сумму остальных чисел в списке
+        return part[0]-sum(part[1:])
+
+    return part
 
 if __name__ == "__main__":
     main()
