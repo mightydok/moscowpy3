@@ -24,26 +24,53 @@ def main():
 def greet_user(bot, update):
     print("Вызван /start")
     bot.sendMessage(update.message.chat_id, text='Привет, я умный бот, могу переводить с русского на аглийский и '
-                                                 'обратно, набери команду /tr <слово> для перевода')
+                                                 'обратно, набери команду /tr <слово> для перевода '
+                                                 'Также умею считать простые арифметические примеры из строки которая заканчивается на = ')
 
 def show_error(bot, update, error):
     print('Update "{} caused error "{}"'.format(update, error))
 
+# Проверка корректной строки для калькулятора
+def check_arifmetic_string(bot, update, message):
+    if len(re.findall(r'\d+\.\d+|\d+|[\+\-\*\/]', message)) < 3:
+        bot.sendMessage(update.message.chat_id, 'Невозможно обработать запрос, не хватает всех цифр или арифметических знаков')
+        return False
+    elif len(re.findall(r'[\+\-\*\/]', message)) == 0 or len(re.findall(r'\d+\.\d+|\d+', message)) == 0:
+        bot.sendMessage(update.message.chat_id, 'В строке не найдены арифметические знаки или цифры, калькулятор не может работать без них')
+        return False
+    elif len(re.findall(r'\d+\.\d+|\d+', message)) == 1:
+        bot.sendMessage(update.message.chat_id, 'Нужна еще одна цифра для работы калькулятора')
+        return False
+    elif '**' in message or '//' in message:
+        bot.sendMessage(update.message.chat_id, 'Арифметические действия: ** и // не поддерживаются')
+        return False
+    else:
+        return True
+
 def talk_to_me(bot, update):
     print('Пришло сообщение: "{}"'.format(update.message.text))
 
-    message = update.message.text.strip()
-    if not message.startswith('=') and message.endswith('=') and re.findall(r'[\+\-\*\/]', message):
-        try:
-            bot.sendMessage(update.message.chat_id, eval(message.split('=',1).pop(0)))
-            return
-        except SyntaxError:
-            bot.sendMessage(update.message.chat_id, 'Ошибка в примере, калькулятор не может выполнить арифметическое действие')
-            return
-        except ZeroDivisionError:
-            bot.sendMessage(update.message.chat_id, 'На ноль делить нельзя')
-            return
+    # Обрабатываем пришедший текст
+    message = update.message.text.strip().replace(' ', '')
+    # Проверяем пришел ли запрос на калькулятор
+    if not message.startswith('=') and message.endswith('='):
+        # Проверям строку для калькулятора на корректный текст
+        if check_arifmetic_string(bot, update, message):
+            try:
+                # Собираем строку для рассчета
+                calculated = re.findall(r'[\+\-\*\/0123456789().]', message)
+                # Считаем и отдаем результат
+                result = eval(''.join(calculated))
+                bot.sendMessage(update.message.chat_id, result)
+                return
+            except SyntaxError:
+                bot.sendMessage(update.message.chat_id, 'Ошибка в примере, калькулятор не может выполнить арифметическое действие')
+                return
+            except ZeroDivisionError:
+                bot.sendMessage(update.message.chat_id, 'На ноль делить нельзя')
+                return
     else:
+        # Если не режим калькулятора, то пишем в ответ текст который пришел
         bot.sendMessage(update.message.chat_id, update.message.text)
 
 def translate_word(bot, update, args):
