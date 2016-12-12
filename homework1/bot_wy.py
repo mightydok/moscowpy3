@@ -62,7 +62,7 @@ def talk_to_me(bot, update):
         if check_arifmetic_string(bot, update, message):
             try:
                 # Собираем строку для рассчета
-                calculated = re.findall(r'[\+\-\*\/0123456789().]', message)
+                calculated = re.findall(r'[\+\-\*\/\d+\(\)\.]', message)
                 # Считаем и отдаем результат
                 result = eval(''.join(calculated))
                 bot.sendMessage(update.message.chat_id, result)
