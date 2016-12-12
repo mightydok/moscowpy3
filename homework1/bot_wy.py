@@ -29,7 +29,7 @@ def greet_user(bot, update):
                         ['.', '0', '=', ':'],
                     ]
     reply_markup = ReplyKeyboardMarkup(custom_keyboard)
-    bot.sendMessage(update.message.chat_id, text='Привет, я умный бот, могу переводить с русского на аглийский и '
+    bot.sendMessage(update.message.chat_id, text='Привет, я умный бот, могу переводить с русского на аглийский и'
                                                  'обратно, набери команду /tr <слово> для перевода '
                                                  'Также умею считать простые арифметические примеры из строки которая заканчивается на = '
                                                  'Для калькулатора есть удобная клавиатура', reply_markup=reply_markup)
@@ -42,19 +42,28 @@ def talk_to_me(bot, update, user_data):
     print(user_data)
 
     # Обрабатываем пришедший текст
-    message = update.message.text.strip().replace(' ', '')
-    # Проверяем пришел ли запрос на калькулятор
+    message = update.message.text.strip()
+    # Проверяем пришел ли запрос на калькулятор c = на конце
     if not message.startswith('=') and message.endswith('='):
+        message = message.replace(' ', '')
         result = calculate(message)
         bot.sendMessage(update.message.chat_id, 'Результат выражения: {}'.format(result))
+    # Проверям пришел ли запрос с клавиатуры
     elif message in '0123456789+-*:.=':
+        message = message.replace(' ', '')
+        # Заменяем : на /, символ / - телеграм не передает
         if message == ':':
             message = message.replace(':','/')
         user_data['calc'] = user_data.get('calc', '') + message
+        # Если пришло = - отдаем результат и обнуляем словарь
         if message == '=':
             result = calculate(user_data['calc'])
             bot.sendMessage(update.message.chat_id, 'Результат выражения: {}'.format(result))
             user_data['calc'] = ''
+    # Проверяем пришел ли запрос для словестного калькулятора
+    elif message.lower().strip().startswith('сколько будет'):
+        result = calculate(word_calc(message))
+        bot.sendMessage(update.message.chat_id, 'Результат выражения: {}'.format(result))
     else:
         # Если не режим калькулятора, то пишем в ответ текст который пришел
         bot.sendMessage(update.message.chat_id, update.message.text)
@@ -164,6 +173,27 @@ def precalculate(part):
         return part[0]-sum(part[1:])
 
     return part
+
+def word_calc(string):
+    # Словарь цифр
+    numbers = {
+    'один': '1', 'два': '2', 'три': '3',
+    'четыре': '4', 'пять': '5', 'шесть': '6',
+    'семь': '7', 'восемь': '8', 'девять': '9',
+    'ноль': '0', 'плюс': '+', 'минус': '-',
+    'умножить': '*', 'разделить': '/', 'и': '.',
+    }
+    # Строка результата
+    result = ''
+    # Обрабатываем строку, удаляем ненужный предлог
+    string = string.lower().strip().replace(' на', '')
+    # Убираем фразу - сколько будет, все остальное добавляем в список
+    string = string.split(' ')[2:]
+    # Собираем строку для рассчета
+    for num in string:
+        result += numbers[num]
+
+    return result
 
 if __name__ == "__main__":
     main()
