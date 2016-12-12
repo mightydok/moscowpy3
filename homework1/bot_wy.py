@@ -32,11 +32,11 @@ def show_error(bot, update, error):
 
 # Проверка корректной строки для калькулятора
 def check_arifmetic_string(bot, update, message):
-    if re.findall(r'((?![\+\-\*\/\.\d+]).)', message):
+    if re.findall(r'((?![\+\-\*\/\.\d+\(\)\=]).)', message):
         bot.sendMessage(update.message.chat_id, 'В строке для калькулятора есть лишние символы, '
                                                 'удалите их для корректной работы арифметических функций')
         return False
-    elif len(re.findall(r'\d+\.\d+|\d+|[\+\-\*\/]', message)) < 3:
+    elif len(re.findall(r'\d+\.\d+|\d+|[\+\-\*\/\(\)]', message)) < 3:
         bot.sendMessage(update.message.chat_id, 'Невозможно обработать запрос, не хватает всех цифр или арифметических знаков')
         return False
     elif len(re.findall(r'[\+\-\*\/]', message)) == 0 or len(re.findall(r'\d+\.\d+|\d+', message)) == 0:
