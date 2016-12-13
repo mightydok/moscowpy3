@@ -13,6 +13,7 @@ def main():
     dp.add_handler(CommandHandler("start", greet_user))
     dp.add_handler(CommandHandler("tr", translate_word, pass_args=True))
     dp.add_handler(CommandHandler("wordcount", word_count, pass_args=True))
+    dp.add_handler(CommandHandler("goroda", goroda, pass_args=True, pass_user_data=True))
     dp.add_handler(MessageHandler(Filters.text, talk_to_me, pass_user_data=True))
 
     dp.add_error_handler(show_error)
@@ -39,7 +40,6 @@ def show_error(bot, update, error):
 
 def talk_to_me(bot, update, user_data):
     print('Пришло сообщение: "{}"'.format(update.message.text))
-    print(user_data)
 
     # Обрабатываем пришедший текст
     message = update.message.text.strip()
@@ -178,6 +178,7 @@ def precalculate(part):
     return part
 
 def word_calc(string):
+    print('Пришла строка для подсчета: "{}"'.format(string))
     # Словарь цифр
     numbers = {
     'один': '1', 'два': '2', 'три': '3',
@@ -201,6 +202,43 @@ def word_calc(string):
 def astro_full_moon(day):
     day = day.lower().replace('?', '').split(' ')[-1]
     return ephem.next_full_moon(day)
+
+def goroda(bot, update, args, user_data):
+    print('Пришла строка для игры в города: "{}"'.format(args))
+
+    next_gorod_letter = ''
+    # Получаем город из списка аргуметов от пользователя
+    gorod = args[0].lower().strip()
+
+    # Получаем в словаре user_data список городов, если такого ключа нет, наполняем его
+    user_data['cities'] = user_data.get('cities', ['москва', 'архангельск', 'коломна', 'ашхабад' ])
+
+    # Если список городов пустой, пишем пользователю
+    if len(user_data['cities']) == 0:
+        bot.sendMessage(update.message.chat_id, 'Города кончились, бот больше не знает!')
+        return
+
+    # Если пользователь передал несколько городов, пишем об этом
+    if len(args) > 1:
+        bot.sendMessage(update.message.chat_id, 'В строке должен быть только один город!')
+        return
+
+    # Если введеный город есть в списке, получаем его последнюю букву
+    if gorod in user_data['cities']:
+        next_gorod_letter = gorod[-1]
+        # Удаляем использованный город из списка
+        user_data['cities'].remove(gorod)
+    else:
+        bot.sendMessage(update.message.chat_id, 'Город: {} не найден в базе'.format(gorod))
+        return
+
+    # Если первая буква города найдена в списке городов, выводим его
+    for city in user_data['cities']:
+        if city.startswith(next_gorod_letter):
+            bot.sendMessage(update.message.chat_id, '{}, ваш ход'.format(city.capitalize()))
+            # Удаляем использованный город из списка
+            user_data['cities'].remove(city)
+            break
 
 if __name__ == "__main__":
     main()
