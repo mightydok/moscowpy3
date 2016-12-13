@@ -119,10 +119,12 @@ def word_count(bot, update, args):
     print('Пришла строка для подсчета: "{}"'.format(args))
     # Создаем список для подсчета количества слов
     numwords = []
+    spec_symbols = '~`@#$%^&*()_-=!?\';[]\{\}<>,.*/+\\'
+
     # Проходим список слов в цикле, убираем спецсимволы и проверяем слово ли нам передали, если да - добавляем
     # в массив для подсчета
     for word in args:
-        if word.strip(spec_symbols).isalpha() == True:
+        if word.strip().replace('\"', '').isalpha() == True:
             numwords.append(word)
     bot.sendMessage(update.message.chat_id, 'Количество слов в строке: {}'.format(len(numwords)))
 
