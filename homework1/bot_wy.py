@@ -3,8 +3,10 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram import ReplyKeyboardMarkup
 from yandex_translate import YandexTranslate, YandexTranslateException
+from botdb import citydblist
 
 import ephem
+import random
 
 def main():
     updater = Updater("278875881:AAE_qMeNfatAqkML4JQF6YZ3rCcJ79hjE4I")
@@ -30,10 +32,14 @@ def greet_user(bot, update):
                         ['.', '0', '=', ':'],
                     ]
     reply_markup = ReplyKeyboardMarkup(custom_keyboard)
-    bot.sendMessage(update.message.chat_id, text='Привет, я умный бот, могу переводить с русского на аглийский и'
-                                                 'обратно, набери команду /tr <слово> для перевода '
-                                                 'Также умею считать простые арифметические примеры из строки которая заканчивается на = '
-                                                 'Для калькулатора есть удобная клавиатура', reply_markup=reply_markup)
+    bot.sendMessage(update.message.chat_id, text='Привет, я умный бот, могу переводить с русского \n'
+                                                 'на аглийский и обратно, набери команду /tr <слово> \n'
+                                                 'для перевода \n'
+                                                 'Также умею считать простые арифметические примеры \n'
+                                                 'из строки которая заканчивается на = \n'
+                                                 'Для калькулатора есть удобная клавиатура \n'
+                                                 'Можно поиграть в города, набери /gorod название_города \n'
+                                                 'или /goroda заново для перезапуска игры \n', reply_markup=reply_markup)
 
 def show_error(bot, update, error):
     print('Update "{} caused error "{}"'.format(update, error))
@@ -206,12 +212,22 @@ def astro_full_moon(day):
 def goroda(bot, update, args, user_data):
     print('Пришла строка для игры в города: "{}"'.format(args))
 
+    # Vars
     next_gorod_letter = ''
-    # Получаем город из списка аргуметов от пользователя
-    gorod = args[0].lower().strip()
+    letter = -1
 
-    # Получаем в словаре user_data список городов, если такого ключа нет, наполняем его
-    user_data['cities'] = user_data.get('cities', ['москва', 'архангельск', 'коломна', 'ашхабад' ])
+    # Получаем строку из списка аргуметов от пользователя
+    user_input = args[0].lower().strip()
+
+    # Перезапуск игры
+    if user_input == 'заново':
+        bot.sendMessage(update.message.chat_id, 'Пересоздал список городов, играем дальше')
+        # Наполняем список в пользовательском словаре
+        user_data['cities'] = citydblist[:]
+        return
+    else:
+        # Получаем в словаре user_data список городов, если такого ключа нет, наполняем его
+        user_data['cities'] = user_data.get('cities', citydblist[:])
 
     # Если список городов пустой, пишем пользователю
     if len(user_data['cities']) == 0:
@@ -224,21 +240,38 @@ def goroda(bot, update, args, user_data):
         return
 
     # Если введеный город есть в списке, получаем его последнюю букву
-    if gorod in user_data['cities']:
-        next_gorod_letter = gorod[-1]
+    if user_input in user_data['cities']:
+        next_gorod_letter = user_input[letter]
+        # Если буква не может быть в начале названия города то выбираем следующую
+        while next_gorod_letter in 'ъьы':
+            letter -= 1
+            next_gorod_letter = user_input[letter]
         # Удаляем использованный город из списка
-        user_data['cities'].remove(gorod)
-    else:
-        bot.sendMessage(update.message.chat_id, 'Город: {} не найден в базе'.format(gorod))
+        user_data['cities'].remove(user_input)
+
+        # Если первая буква города найдена в списке городов, выводим его
+        city_for_random = []
+        for city in user_data['cities']:
+            if city.startswith(next_gorod_letter):
+                city_for_random.append(city)
+
+        # Выводим случайный город из базы по найденной букве, так интереснее
+        if len(city_for_random) > 0:
+            result = random.choice(city_for_random)
+            add_message = ''
+        # Или выводим случайныйы город
+        else:
+            result = random.choice(user_data['cities'])
+            add_message = 'Не нашел города на эту букву, выбрал случайный: '
+
+        bot.sendMessage(update.message.chat_id, add_message + '{}, ваш ход'.format(result.capitalize()))
+        # Удаляем использованный город из списка
+        user_data['cities'].remove(result)
         return
 
-    # Если первая буква города найдена в списке городов, выводим его
-    for city in user_data['cities']:
-        if city.startswith(next_gorod_letter):
-            bot.sendMessage(update.message.chat_id, '{}, ваш ход'.format(city.capitalize()))
-            # Удаляем использованный город из списка
-            user_data['cities'].remove(city)
-            break
+    else:
+        bot.sendMessage(update.message.chat_id, 'Город: {} уже был или нет такого города в природе'.format(user_input))
+        return
 
 if __name__ == "__main__":
     main()
