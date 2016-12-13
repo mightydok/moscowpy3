@@ -4,7 +4,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram import ReplyKeyboardMarkup
 from yandex_translate import YandexTranslate, YandexTranslateException
 
-calc = []
+import ephem
 
 def main():
     updater = Updater("278875881:AAE_qMeNfatAqkML4JQF6YZ3rCcJ79hjE4I")
@@ -64,6 +64,9 @@ def talk_to_me(bot, update, user_data):
     elif message.lower().strip().startswith('сколько будет'):
         result = calculate(word_calc(message))
         bot.sendMessage(update.message.chat_id, 'Результат выражения: {}'.format(result))
+    elif message.lower().strip().startswith('когда ближайшее полнолуние после'):
+        result = astro_full_moon(message)
+        bot.sendMessage(update.message.chat_id, 'Ближайшее полнолуние будет: {}'.format(result))
     else:
         # Если не режим калькулятора, то пишем в ответ текст который пришел
         bot.sendMessage(update.message.chat_id, update.message.text)
@@ -194,6 +197,10 @@ def word_calc(string):
         result += numbers[num]
 
     return result
+
+def astro_full_moon(day):
+    day = day.lower().replace('?', '').split(' ')[-1]
+    return ephem.next_full_moon(day)
 
 if __name__ == "__main__":
     main()
