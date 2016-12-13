@@ -4,6 +4,6 @@
 workspace.xml
 __pycache__/
 homework2
-.env/**
-.env
-.env/
+env/**
+env
+env/
