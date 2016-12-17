@@ -13,7 +13,7 @@ try:
         for line in lines:
             name = line['Street']
             streets[name] = streets.get(name, 0) + 1
-        # Можео еще просто добавить в список и потом посчитать количество вхождений
+        # Можно еще просто добавить в список и потом посчитать количество вхождений
         # функция Counter - https://docs.python.org/3.5/library/collections.html#collections.Counter
         streets_sorted = sorted(streets.items(), key=lambda x: x[1], reverse=True)
         print('Название улицы: {}, количество остановок: {}'.format(streets_sorted[0][0], streets_sorted[0][1]))
