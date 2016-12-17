@@ -3,6 +3,7 @@
 import csv
 import json
 import sys
+from vincenty import vincenty
 
 def extract_data(filename, encoding, type):
     result = {}
@@ -21,9 +22,16 @@ def extract_data(filename, encoding, type):
 
 if __name__ == '__main__':
     try:
+        uniq = {}
         metro = extract_data('data_metro_20161217.json', 'cp1251', 'json')
-        bus_stop = extract_data('datamos_20161217.csv', 'cp1251', 'csv')
-        print(metro, bus_stop)
+        bus = extract_data('datamos_20161217.csv', 'cp1251', 'csv')
+        for metro_station in metro:
+            for bus_station in bus:
+                if vincenty(metro[metro_station], bus[bus_station]) <= 0.5:
+                    uniq[metro_station] = uniq.get(metro_station, 0) + 1
+
+        metro_station_sorted = sorted(uniq.items(), key=lambda x: x[1], reverse=True)
+        print('Станция метро: {}, количество остановок в радиусе 0.5км: {}'.format(metro_station_sorted[0][0], metro_station_sorted[0][1]))
 
     except OSError as err:
         print('OS Error: {}'.format(err))
