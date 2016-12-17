@@ -4,26 +4,26 @@ import csv
 import json
 import sys
 
-
-def data_metro():
+def extract_data(filename, encoding, type):
     result = {}
-    with open('data_metro_20161217.json', 'r', encoding='cp1251') as f:
-        # Загружаем json, на выходе список
-        metrodata = json.load(f)
-        # Внутри каждого элемента списка словарь
-        for line in metrodata:
+    with open(filename, 'r', encoding=encoding) as f:
+        if type == 'json':
+            data = json.load(f)
+        elif type == 'csv':
+            data = csv.DictReader(f, delimiter=';')
+        else:
+            return 'Неподдерживаемый тип данных'
+
+        for line in data:
             name = line['Name']
             result[name] = result.setdefault(name, [float(line['Longitude_WGS84']), float(line['Latitude_WGS84'])])
         return result
 
-def data_bus_stop():
-    pass
-
 if __name__ == '__main__':
     try:
-        metro = data_metro()
-        print(metro)
-        bus_stop = data_bus_stop()
+        metro = extract_data('data_metro_20161217.json', 'cp1251', 'json')
+        bus_stop = extract_data('datamos_20161217.csv', 'cp1251', 'csv')
+        print(metro, bus_stop)
 
     except OSError as err:
         print('OS Error: {}'.format(err))
