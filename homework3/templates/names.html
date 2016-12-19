@@ -1,0 +1,22 @@
+<!doctype html>
+<title>Список имен используемых при регистрации в Москве</title>
+{% if names %}
+<table border="1" width="50%">
+    <tr>
+        <th>Имя</th>
+        <th>Месяц</th>
+        <th>Год</th>
+        <th>Количество</th>
+    </tr>
+    {% for item in names %}
+    <tr>
+        <td>{{ item['Cells']['Name'] }}</td>
+        <td>{{ item['Cells']['Month'] }}</td>
+        <td>{{ item['Cells']['Year'] }}</td>
+        <td>{{ item['Cells']['NumberOfPersons'] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+  <h1>Не найденно данных</h1>
+{% endif %}

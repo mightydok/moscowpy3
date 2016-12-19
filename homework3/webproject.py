@@ -1,8 +1,8 @@
 # encoding: utf-8
 
-from flask import Flask, abort, request
+from flask import Flask, abort, request, render_template
 
-from req import get_weather
+from req import get_weather, get_names
 from datetime import datetime
 from news_list import all_news
 
@@ -41,6 +41,19 @@ def news_by_id(news_id):
         return result
     else:
         abort(404)
+
+@app.route('/names')
+def moscow_names():
+    try:
+        year = int(request.args.get('year'))
+    except:
+        year = None
+
+    try:
+        names = get_names(year=year)
+        return render_template('names.html', names=names)
+    except:
+        raise
 
 if __name__ == '__main__':
     app.run(debug=True)
