@@ -37,11 +37,11 @@ if __name__ == '__main__':
         # Для каждой станции метро получаем название станции и координаты вестибюлей
         for metro in data_metro:
             metro_name_of_station = metro['NameOfStation']
-            metro_position = [float(metro['Longitude_WGS84']), float(metro['Latitude_WGS84'])]
+            metro_position = [float(metro['Latitude_WGS84']), float(metro['Longitude_WGS84'])]
             # Для каждой остановки
             for bus in data_bus:
                 bus_global_id = bus['global_id']
-                bus_position = [float(bus['Longitude_WGS84']), float(bus['Latitude_WGS84'])]
+                bus_position = [float(bus['Latitude_WGS84']), float(bus['Longitude_WGS84'])]
                 # Если расстояние от вестибюля до остановки менее или равно 0.5км
                 if vincenty(metro_position, bus_position) <= 0.5:
                     # Наполняем словарь
